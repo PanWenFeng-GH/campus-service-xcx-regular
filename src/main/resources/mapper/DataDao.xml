@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boot.mapper.DataDao">
+	
+	<select id="pagelist" parameterType="map" resultType="com.boot.entity.TData">
+		select d.*,u.name from t_data d 
+		left join t_wechat_user u on u.id=d.wechat_id 
+		<where>
+			<if test="name != null and name !='' ">
+				and u.name like concat('%',#{name},'%')
+			</if>
+			<if test="type != null and type !='' ">
+				and d.type = #{type}
+			</if>
+		</where>
+		ORDER BY d.date desc
+	</select>
+</mapper>

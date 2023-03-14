@@ -1,0 +1,101 @@
+<div class="layuimini-container layui-anim layui-anim-upbit">
+	<div class="layuimini-main">
+		<form class="layui-form layui-form-pane" action="">
+			<div class="layui-form-item">
+				<div class="layui-inline">
+					<label class="layui-form-label">姓名</label>
+					<div class="layui-input-inline">
+						<input type="text" name="name" id="name" autocomplete="off"
+							class="layui-input">
+					</div>
+				</div>
+				<div class="layui-inline">
+					<button type="button" class="layui-btn" onclick="query();">搜
+						索</button>
+				</div>
+			</div>
+		</form>
+		<table class="layui-hide" id="table" lay-filter="currentTableFilter"></table>
+	</div>
+</div>
+<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-xs" lay-event="edit" onclick="edit('{{d.id}}')">编辑</a>
+<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="edit" onclick="dell('{{d.id}}')">删除</a>
+</script>
+<script>
+var form,table,tableObj;
+var type =8;
+layui.use(['form','table'], function(){
+  table = layui.table;
+  form = layui.form;
+  form.render();
+	//第一个实例
+  tableObj = table.render({
+	    elem: '#table'
+	    ,url: '/private/data/list' //数据接口
+	    ,method: 'post'
+	    ,page: true //开启分页
+	    ,cols: [[ //表头
+	       {type: 'numbers', title: '序号', width:80}
+	       ,{field: 'name', title: '姓名', width:200}
+		  ,{field: 'value', title: '显示值',templet: function (d) {
+	          	return d.value+"mol/L";
+	       }}
+	      ,{field: 'status', title: '标签',templet: function (d) {
+	          	if(d.status == 1){
+	          		return  "正常"
+	              }else{
+	              	return  "异常"
+	              }
+	          	return "";
+	          }}
+	      ,{field: 'createTime', width: 200, title: '时间'}
+	      ,{title: '操作',toolbar: '#barDemo', width:150}
+	    ]]
+	  ,where:{
+		  type:type
+	  }
+	});
+});
+var query = function(){
+	var name = $("#name").val();
+	table.reload('table', {
+		  url: '/private/data/list'
+		  ,where: {
+			  name:name,type:type
+		  },page: {
+			   curr: 1 //重新从第 1 页开始
+		  }
+	});
+}
+var edit = function(id){
+	$.ajax({
+		url:'/private/data/edit',
+		type:'POST',
+		dataType:'html',
+		data:{id:id},
+		success:function(obj){
+			layer.open({
+				type: 1,
+				area: ['500px', '400px'],
+				content: obj,
+				yes:function(index){
+					
+				}
+			});
+		}
+	});
+}
+var dell = function(id){
+	layer.confirm("确定删除吗？",function(){
+		$.post("/private/data/dell",{id:id},function(obj){
+			layer.alert(obj.message, function(index){
+	    		if(obj.success){
+	        		layer.close(index);
+	        		tableObj.reload();
+	        	}
+	    	});
+		},"json");
+	})
+}
+</script>

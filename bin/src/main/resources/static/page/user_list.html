@@ -1,0 +1,216 @@
+<div class="layuimini-container layui-anim layui-anim-upbit">
+    <div class="layuimini-main">
+		<button class="layui-btn" type="button" onclick="add();" class="btn btn-success">新增</button>
+        <table class="layui-hide" id="table" lay-filter="currentTableFilter"></table>
+    </div>
+</div>
+<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-xs" lay-event="edit" onclick="edit({{d.id}},'{{d.username}}','{{d.password}}','{{d.role.id}}')">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" onclick="dell({{d.id}})">删除</a>
+</script>
+<script type="text/html" id="typeDemo">
+{{#  if(d.type ==2){ }}
+    管理员
+  {{#  } else { }}
+   	 普通用户
+  {{#  } }}
+</script>
+<script>
+var getRole = function(){
+	$.post("/private/role/list/list",{},function(obj){
+		roleList = obj.data;
+	},"json");
+}
+var form,table;
+layui.use(['form','table'], function(){
+  table = layui.table;
+  form = layui.form;
+	//第一个实例
+  table.render({
+	    elem: '#table'
+	    ,url: '/private/user/list' //数据接口
+	    ,page: true //开启分页
+	    ,cols: [[ //表头
+	       {type: 'numbers', title: '序号', width:80}
+	      ,{field: 'username', title: '用户名', width:200}
+	      ,{field: 'password', title: '密码'}
+// 	      ,{field: 'type', title: '用户类型',templet: '#typeDemo'}
+	      ,{field: 'role', title: '用户角色',templet:  function(d){
+	    	  if(d.role!=null){
+	    		  return d.role.roleName;
+	    	  }
+	        return '';
+	      }}
+	      ,{field: 'updateTime', title: '更新时间'}
+	      ,{title: '操作',toolbar: '#barDemo', width:150}
+	    ]]
+	  });
+  getRole();
+});
+//角色数据
+var roleList;
+var dell = function(id){
+	if(confirm(" 确定删除吗？")){
+		$.ajax({
+			url:'/private/user/dell',
+			type:'POST',
+			dataType:'json',
+			data:{id:id},
+			success:function(obj){
+				layer.alert(obj.message);
+				if(obj.success){
+					table.reload('table',null);
+				}
+			}
+		});
+	}
+}
+var add = function(){
+	var roleHtml="";
+	if(roleList!=null&&roleList.length>0){
+		for(var i=0;i<roleList.length;i++){
+			roleHtml +='<option value="'+roleList[i].id+'">'+roleList[i].roleName+'</option>';
+		}
+	}
+// 	console.log(roleHtml);
+	var html = '<div id="edit-div">'+
+					'<form class="layui-form" action="">'+
+						'<div class="layui-form-item">'+
+						    '<label class="layui-form-label">用户名</label>'+
+						    '<div class="layui-input-block">'+
+						      '<input type="text" id="username1" name="username" required  lay-verify="required" placeholder="请输入用户名" autocomplete="off" class="layui-input">'+
+						    '</div>'+
+						 '</div>'+
+						'<div class="layui-form-item layui-form-text">'+
+						    '<label class="layui-form-label">密码</label>'+
+						    '<div class="layui-input-block">'+
+						    '<input type="text" id="password" name="password" required  lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">'+
+						    '</div>'+
+					  '</div>'+
+					  '<div class="layui-form-item">'+
+					    '<label class="layui-form-label">用户类型</label>'+
+					    '<div class="layui-input-block">'+
+					      '<select name="role.id" id="type">'+roleHtml+
+// 					        '<option value="1">普通用户</option>'+
+// 					        '<option value="2">管理员</option>'+
+					      '</select>'+
+					    '</div>'+
+					  '</div>'+
+					'</form>'+
+				'</div>';
+	layer.open({
+	  title: "新增",
+	  area: ['500px', '450px'],
+	  content:html,
+	  success:function(){
+		  form.render("select");
+	  },
+	  yes: function(index, layero){
+		var username = $("#username1").val();
+		var password = $("#password").val();
+		var type = $("#type").val();
+		if(username==null||username==""){
+			layer.alert("请输入用户名");
+			return;
+		}
+		if(password==null||password==""){
+			layer.alert("请输入密码");
+			return;
+		}
+		$.ajax({
+			url:'/private/user/save',
+			type:'POST',
+			dataType:'json',
+			async:false,
+			data:{username:username,password:password,'role.id':type},
+			success:function(obj){
+				layer.alert(obj.message);
+				if(obj.success){
+					table.reload('table',null);
+				}
+			}
+		});
+	    layer.close(index);
+	  }
+	}); 
+}
+var edit = function(id,username,password,roleId){
+	var roleHtml="";
+	if(roleList!=null&&roleList.length>0){
+		for(var i=0;i<roleList.length;i++){
+			if(roleId==roleList[i].id){
+				roleHtml +='<option value="'+roleList[i].id+'" selected ="selected">'+roleList[i].roleName+'</option>';
+			}else{
+				roleHtml +='<option value="'+roleList[i].id+'">'+roleList[i].roleName+'</option>';
+			}
+		}
+	}
+	var html = '<div id="edit-div">'+
+				'<form class="layui-form" action="">'+
+					'<div class="layui-form-item">'+
+					    '<label class="layui-form-label">用户名</label>'+
+					    '<div class="layui-input-block">'+
+					      '<input type="text" id="username1"readonly="readonly" name="username"  value="'+username+'" required  lay-verify="required" placeholder="请输入用户名" autocomplete="off" class="layui-input">'+
+					    '</div>'+
+					 '</div>'+
+					'<div class="layui-form-item layui-form-text">'+
+					    '<label class="layui-form-label">密码</label>'+
+					    '<div class="layui-input-block">'+
+					    '<input type="text" id="password" name="password" value="'+password+'" required  lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">'+
+					    '</div>'+
+				  '</div>'+
+				  '<div class="layui-form-item">'+
+				    '<label class="layui-form-label">用户类型</label>'+
+				    '<div class="layui-input-block">'+
+				      '<select name="roleid" id="roleid">'+roleHtml+
+// 				        '<option value="1"';
+// 				        if(type==1){
+// 				        	html += 'selected ="selected"';
+// 				        }
+// 				      	html += '>普通用户</option><option value="2"';
+// 				        if(type==2){
+// 				        	html += 'selected ="selected"';
+// 				        }
+// 				        html += '>管理员</option>'+
+				      '</select>'+
+				    '</div>'+
+				  '</div>'+
+				'</form>'+
+			'</div>';
+	layer.open({
+	  title: "编辑",
+	  area: ['500px', '450px'],
+	  content:html,
+	  success:function(){
+		  form.render("select");
+	  },
+	  yes: function(index, layero){
+		var username = $("#username1").val();
+		var password = $("#password").val();
+		var roleid = $("#roleid").val();
+		if(username==null||username==""){
+			layer.alert("请输入用户名");
+			return;
+		}
+		if(password==null||password==""){
+			layer.alert("请输入密码");
+			return;
+		}
+		$.ajax({
+			url:'/private/user/save',
+			type:'POST',
+			dataType:'json',
+			async:false,
+			data:{id:id,username:username,password:password,'role.id':roleid},
+			success:function(obj){
+				layer.alert(obj.message);
+				if(obj.success){
+					table.reload('table',null);
+				}
+			}
+		});
+	    layer.close(index);
+	  }
+	}); 
+}
+</script>

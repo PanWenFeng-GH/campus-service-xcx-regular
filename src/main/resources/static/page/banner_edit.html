@@ -1,0 +1,103 @@
+<style>
+	.layui-upload-img{
+		max-width: 120px;
+		max-height: 120px;
+	}
+</style>
+<div class="layuimini-container layui-anim layui-anim-upbit">
+	<div class="layuimini-main">
+		<form class="layui-form" id="demo1" style="margin: 10px">
+			<!-- 提示：如果你不想用form，你可以换成div等任何一个普通元素 -->
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">标题</label>
+					<div class="layui-input-block">
+						<input type="hidden" name="id" id="id" class="layui-input"> <input
+							type="text" name="name" id="name" placeholder="请输入标题" autocomplete="off"
+							lay-verify="required" class="layui-input">
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">排序</label>
+					<div class="layui-input-block">
+						<input type="text" name="sort" id="sort" placeholder="请输入排序" autocomplete="off"
+							lay-verify="required" class="layui-input">
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">图片</label>
+				<div class="layui-input-block">
+					<button type="button" class="layui-btn" id="test1">
+						<i class="layui-icon">&#xe67c;</i>上传图片
+					</button>
+					<div class="layui-upload-list" id="upload-list">
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" type="submit" lay-submit=""
+						lay-filter="demo1">保存</button>
+					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/wangeditor@latest/dist/wangEditor.min.js"></script> -->
+<script type="text/javascript">
+var form ;
+var E;
+var editor;
+var id = getUrlParam("id");
+var getDetail = function(id){
+	if(id){
+		$.post("/private/banner/detail",{id:id},function(obj){
+			//console.log(obj.data);
+			var data = obj.data;
+			$("#id").val(data.id);
+			$("#name").val(data.name);
+			$("#sort").val(data.sort);
+			var html ='<img class="layui-upload-img" id="img" src="'+obj.data.img+'">';
+			$("#upload-list").html(html);
+		});
+	}
+}
+	layui.use([ 'form', 'tinymce','upload'], function() {
+		form = layui.form;
+		getDetail(id);//
+		form.render();
+		var upload = layui.upload;
+		//执行实例
+		var uploadInst = upload.render(	{
+			elem: '#test1' //绑定元素
+			,url: '/upload/' //上传接口
+			,done: function(res){
+				//上传完毕回调
+				var html ='<img class="layui-upload-img" id="img" src="getFile/'+res.data+'">';
+				$("#upload-list").html(html);
+			}
+		});
+		form.on('submit(demo1)', function(data) {
+			var img = $("#img").attr("src");
+			if(!img){
+				layer.alert("请选择图片");
+				return ;
+			}
+			data.field.img=img;
+			$.post("/private/banner/save", data.field, function(obj) {
+				layer.alert(obj.message, function(index2) {
+					if (obj.success) {
+						layer.closeAll();
+						window.location.hash = "/page/banner_list.html";
+					}
+					layer.close(index2);
+				});
+			}, 'json');
+			return false;
+		})
+	});
+</script>

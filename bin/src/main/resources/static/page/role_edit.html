@@ -1,0 +1,182 @@
+<div class="layuimini-container layui-anim layui-anim-upbit">
+    <div class="layuimini-main">
+		<form class="layui-form" id="vForm" action="" method="post" onsubmit="return false;">
+		  <input id="id" name="id" type="hidden"> 
+		  <div class="layui-form-item">
+		    <label class="layui-form-label"> 角色标识</label>
+		    <div class="layui-input-block">
+		      <input type="text" id="roleCode" name="roleCode" value="" placeholder="请输入角色标识" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label"> 角色名称</label>
+		    <div class="layui-input-block">
+		      <input type="text" id="roleName" name="roleName" value="" placeholder="请输入角色名称" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label"> 角色简述</label>
+		    <div class="layui-input-block">
+		      <input type="text" id="description" name="description" value="" placeholder="请输入角色简述" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		  	<input id="ztreeMenu" name="ztreeMenu" type="hidden"> 
+		    <label class="layui-form-label"> 角色权限</label>
+		    <div class="layui-input-block">
+		    	<div id="trees" class="demo-tree demo-tree-box"></div>
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <div class="layui-input-block">
+		      <button class="layui-btn" onclick="subRole();">保存</button>
+		      <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+		    </div>
+		  </div>
+		</form>
+	</div>
+</div>
+<script>
+var id = getUrlParam("id");
+var tree,layer,inst1;
+layui.use(['tree', 'util'], function(){
+    var $ = layui.$;
+    tree = layui.tree
+        ,layer = layui.layer;
+    //模拟数据
+    formData(); 
+    //常规用法
+    inst1 =tree.render({
+      elem: '#trees' //默认是点击节点可进行收缩
+      ,data: getData()
+      ,showCheckbox: true //是否显示复选框
+      ,isJump: true //是否允许点击节点时弹出新窗口跳转
+      ,showLine: true //是否开启连接线
+    });
+});
+
+function getData(){
+//     var data = [{
+//         title: '江西'
+//         ,id: 1
+//         ,spread:true
+//         ,children: [{
+//           title: '南昌'
+//           ,id: 1000
+//         }]
+//       }];
+	var data = [];
+	$.ajax({
+		url:'/private/role/getMenu',
+		type:'post',
+		data:{id:id},
+		dataType:'json',
+		async: false,
+		success:function(obj){
+			console.log(obj.data);
+	    	var listMap = obj.data.listMap
+	    	var roleList = obj.data.roleList
+	    	var map = new Map();
+	    	if(roleList!=null&&roleList.length>0){
+	    		for(var i=0;i<roleList.length;i++){
+	    			map.set(roleList[i][0],roleList[i][0]);
+	    		}
+	    	}
+	    	if(roleList!=null){
+	    		for(var i=0;i<listMap.length;i++){
+	    			var children = [];
+	    			var childMenus = listMap[i].childMenu;
+	    			if(childMenus&&childMenus.length>0){
+	    				for(var j=0;j<childMenus.length;j++){
+	    					var checked = false;
+	    					if(map.get(childMenus[j].id)!=null){
+	    						checked = true;
+	    					}
+	    					children.push({title:childMenus[j].name,id:childMenus[j].id,checked:checked});
+	    				}
+	    			}
+	    			checked = false;
+					if(map.get(listMap[i].id)!=null){
+						checked = true;
+					}
+	    			data.push({title:listMap[i].name,id:listMap[i].id,spread:true,children:children,checked:checked});
+	    		}
+	    	}
+		}
+	});
+    return data;
+}
+function getUrlParam(name) {
+	var l = window.location.hash.split("?")[1];
+	if(l==null||l==""){
+		return null
+	}
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var r = l.match(reg);
+    if (r != null) {
+        return decodeURI(r[2])
+    } else {
+        return null
+    }
+}
+var formData = function(){
+	if(id!=null&&id!=""){
+		$.post("/private/role/edit",{'id':id},function(obj){
+			if(obj.success){
+				//console.log(obj.data);
+				$("#id").val(obj.data.id);
+				$("#roleCode").val(obj.data.roleCode);
+				$("#roleName").val(obj.data.roleName);
+				$("#description").val(obj.data.description);
+			}
+		},'json');
+	}
+}
+var treeIds = [];
+var getTreeIds = function(checkData){
+	if(checkData){
+		if(checkData.children!=null&&checkData.children.length>0){
+			treeIds.push(checkData.id);
+			for(var j=0;j<checkData.children.length;j++){
+				getTreeIds(checkData.children[j]);
+			}
+		}else{
+			treeIds.push(checkData.id);
+		}
+	}
+}
+var subRole = function(){
+	var checkData = inst1.getChecked('trees');
+// 	console.log(checkData);
+	treeIds=[];
+	if(checkData){
+		for(var i=0;i<checkData.length;i++){
+			getTreeIds(checkData[i]);
+		}
+	}
+// 	console.log(treeIds);
+	$("#ztreeMenu").val(treeIds);
+	$("#id").val(id);
+	var roleCode = $("#roleCode").val();
+	var roleName = $("#roleName").val();
+	var description = $("#description").val();
+	if(roleCode==null||roleCode==""){
+		  layer.alert("请输入角色标识");
+		  return;
+	}
+	if(roleName==null||roleName==""){
+		  layer.alert("请输入角色名称");
+		  return;
+	}
+	if(description==null||description==""){
+		  layer.alert("请输入角色简述");
+		  return;
+	}
+	$.post("/private/role/save",$("#vForm").serialize(),function(obj){
+		layer.alert(obj.message);
+		if(obj.success){
+			//window.href.location = "page/role_list.html";
+		}
+	},'json');
+}
+</script>

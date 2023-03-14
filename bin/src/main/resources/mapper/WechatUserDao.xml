@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boot.mapper.WechatUserMapper">
+	<select id="newUsersPageList" parameterType="map" resultType="map">
+		select * from luanwl.t_wechat_user u 
+		<where>
+			<if test = "startDate != null and startDate !=''">
+				to_char (u.create_time, 'yyyy-MM-dd') &gt;= #{startDate}
+			</if>
+			<if test = "endDate != null and endDate !=''">
+				AND to_char(u.create_time, 'yyyy-MM-dd') &lt;= #{endDate}
+			</if>
+		</where>
+		ORDER BY u.create_time desc
+		<if test="pageNumber != null and pagzSize != null">
+			LIMIT #{pagzSize} OFFSET #{pageNumber}
+		</if>
+	</select>
+	
+	<select id="newUsersCount" parameterType="map" resultType="long">
+		select count(1) from luanwl.t_wechat_user u 
+		<where>
+			<if test = "startDate != null and startDate !=''">
+				to_char(u.create_time, 'yyyy-MM-dd') &gt;= #{startDate}
+			</if>
+			<if test = "endDate != null and endDate !=''">
+				AND to_char(u.create_time, 'yyyy-MM-dd') &lt;= #{endDate}
+			</if>
+		</where>
+	</select>
+	
+	
+	<select id="newUsersEchartsSex" resultType="map">
+		select sex,count(1) from luanwl.t_wechat_user 
+		<where>
+			<if test = "startDate != null and startDate !=''">
+				to_char (create_time, 'yyyy-MM-dd') &gt;= #{startDate}
+			</if>
+			<if test = "endDate != null and endDate !=''">
+				AND to_char(create_time, 'yyyy-MM-dd') &lt;= #{endDate}
+			</if>
+		</where>
+		group by sex
+	</select>
+	<select id="newUsersEchartsCityTop10" resultType="map">
+	select city,count(1)count,
+		(select count(1) from luanwl.t_wechat_user
+			<where>
+				<if test = "startDate != null and startDate !=''">
+					to_char (create_time, 'yyyy-MM-dd') &gt;= #{startDate}
+				</if>
+				<if test = "endDate != null and endDate !=''">
+					AND to_char(create_time, 'yyyy-MM-dd') &lt;= #{endDate}
+				</if>
+			</where>
+		)total 
+	from luanwl.t_wechat_user
+	<where>
+		 city <![CDATA[<>]]>'未知' and city is not null 
+		<if test = "startDate != null and startDate !=''">
+			and to_char (create_time, 'yyyy-MM-dd') &gt;= #{startDate}
+		</if>
+		<if test = "endDate != null and endDate !=''">
+			AND to_char(create_time, 'yyyy-MM-dd') &lt;= #{endDate}
+		</if>
+	</where>
+	 GROUP BY city
+	ORDER BY count desc
+	LIMIT 10
+	</select>
+	
+	<select id="newUsersEchartsXz30" resultType="map">
+	select date,count(1)count
+	from (
+		select to_char(create_time, 'MM/dd') date from luanwl.t_wechat_user where to_char(create_time, 'yyyy-MM-dd') 
+			BETWEEN to_char (now() - interval '30 days', 'yyyy-MM-dd') and to_char (now() - interval '1 days', 'yyyy-MM-dd'))m
+	GROUP BY date
+	ORDER BY date desc
+	</select>
+	
+	<select id="newUsersEchartsRh30" resultType="map">
+	select to_char(create_time, 'MM/dd')date,count(DISTINCT user_id)  from luanwl.c_log 
+	where to_char(create_time, 'yyyy-MM-dd')
+	BETWEEN to_char (now() - interval '30 days', 'yyyy-MM-dd') and to_char (now() - interval '1 days', 'yyyy-MM-dd')
+		GROUP BY date
+		ORDER BY date desc
+	</select>
+	
+	<select id="newUsersExportList" resultType="map">
+		SELECT
+			nickname,
+			phone,
+			(CASE sex WHEN '1' THEN '男' WHEN '2' THEN '女' END )sex,
+			city,
+			(CASE regist_month WHEN 1 THEN '微信' WHEN 2 THEN '安卓' WHEN 3 THEN 'IOS'  END ) regist_month,
+			to_char( create_time, 'yyyy-MM-dd HH:mm:ss' ) create_time 
+		FROM
+			luanwl.t_wechat_user 
+		<where>
+		1=1
+		<if test = "startDate != null and startDate !=''">
+			and to_char (create_time, 'yyyy-MM-dd') &gt;= #{startDate}
+		</if>
+		<if test = "endDate != null and endDate !=''">
+			AND to_char(create_time, 'yyyy-MM-dd') &lt;= #{endDate}
+		</if>
+	</where>
+		ORDER BY
+			create_time DESC
+	</select>
+</mapper>

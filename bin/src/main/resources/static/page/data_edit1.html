@@ -1,0 +1,40 @@
+<form class="layui-form" id="demo1" style="margin: 10px"> <!-- 提示：如果你不想用form，你可以换成div等任何一个普通元素 -->
+  <div class="layui-form-item">
+    <div class="layui-form-item">
+	    <label class="layui-form-label">显示值</label>
+	    <div class="layui-input-block">
+	      <input type="hidden" name="id" value="${(data.id)!}"class="layui-input">
+	      <input type="text" name="value" value="${(data.value)!}" autocomplete="off" lay-verify="required"  class="layui-input">
+	    </div>
+	  </div>
+  </div>
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" type="submit" lay-submit="" lay-filter="demo1">保存</button>
+      <button class="layui-btn layui-btn-primary" type="button" onclick="openClose();">取消</button>
+    </div>
+  </div>
+</form>
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  var laydate = layui.laydate;
+  form.render();
+  form.on('submit(demo1)', function(data){
+    /* layer.alert(JSON.stringify(data.field), {
+      title: '最终的提交信息'
+    }) */
+    $.post("/private/data/save",data.field,function(obj){
+    	layer.alert(obj.message, function(index2){
+    		if(obj.success){
+//     			query();
+    			layer.closeAll();
+    			tableObj.reload();
+        	} 
+    		layer.close(index2);
+    	});
+    },'json');
+    return false;
+  })
+});
+</script>

@@ -1,0 +1,94 @@
+<div class="layuimini-container layui-anim layui-anim-upbit">
+    <div class="layuimini-main">
+    	<form class="layui-form layui-form-pane" action="">
+           <div class="layui-form-item">
+               <div class="layui-inline">
+                   <label class="layui-form-label">墓区名称</label>
+                   <div class="layui-input-inline">
+                       <select class="layui-input" name="m_type"  id="m_type">
+                       		<option value="">全部</option>
+                       		<option value="1">三北公墓湖西山墓区</option>
+                       		<option value="2">三北公墓潘岙墓区</option>
+                       		<option value="3">三北公墓白洋墓区</option>
+<!--                        		<option value="4">大佛山墓区</option> -->
+                       		<option value="5">彭桥公墓墓区</option>
+                       		<option value="6">杜湖墓区</option>
+                       		<option value="7">匡堰九龙寺墓区</option>
+                       		<option value="8">天园墓区</option>
+                       		<option value="9">彭桥公墓下岙墓区</option>
+                       </select>
+                   </div>
+               </div>
+               <div class="layui-inline">
+                   <label class="layui-form-label">逝者姓名</label>
+                   <div class="layui-input-inline">
+                       <input type="text" name="name" id="name" autocomplete="off" class="layui-input">
+                   </div>
+               </div>
+               <div class="layui-inline">
+                   <button type="button" class="layui-btn" onclick="query();">搜 索</button>
+               </div>
+           </div>
+       </form>
+        <table class="layui-hide" id="table" lay-filter="currentTableFilter"></table>
+    </div>
+</div>
+<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-xs" lay-event="edit" onclick="log({{d.id}})">查看扫墓</a>
+</script>
+<!-- list: [
+    		{id:'1',title:'三北公墓湖西山墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'2',title:'三北公墓潘岙墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'3',title:'三北公墓白洋墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'4',title:'大佛山墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'5',title:'彭桥公墓夏岙墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'6',title:'杜湖墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'7',title:'匡堰九龙寺墓区',img:'./tombs/img/1.jpg'}
+    		,{id:'8',title:'天园墓区',img:'./tombs/img/1.jpg'}
+    	] -->
+<script>
+var form,table;
+layui.use(['form','table'], function(){
+  table = layui.table;
+  form = layui.form;
+  form.render();
+	//第一个实例
+  table.render({
+	    elem: '#table'
+	    ,url: '/private/tombs/list' //数据接口
+	    ,page: true //开启分页
+	    ,cols: [[ //表头
+	       {type: 'numbers', title: '序号', width:80}
+	       ,{field: 'm_name', title: '墓区名称', width:120}
+	      ,{field: 'azz', title: '安葬者', width:130}
+		  ,{field: 'p_q', title: '区'}
+		  ,{field: 'p_p', title: '排'}
+		  ,{field: 'p_qt', title: '起'}
+		  ,{field: 'p_h', title: '号'}
+		  ,{field: 'num', title: '穴数'}
+	      ,{field: 'type', title: '坟墓种类'}
+	      ,{field: 'name', title: '姓名',width:100}
+	      ,{field: 'address', title: '家庭地址',width:150}
+	      ,{field: 'phone', title: '联系电话'}
+	      ,{title: '操作',toolbar: '#barDemo', width:150}
+	    ]]
+	  });
+});
+var query = function(){
+	var m_type = $("#m_type").val();
+	var name = $("#name").val();
+	table.reload('table', {
+		  url: '/private/tombs/list'
+		  ,where: {
+			  name:name,
+			  m_type:m_type
+		  },page: {
+			    curr: 1 //重新从第 1 页开始
+		  }
+	});
+}
+var log = function(id){
+// 	layuimini.href("/page/tombs_log_list.html?id="+id,"祭祀记录")
+	window.location.hash = "/page/tombs_log_detail_list.html?id="+id;
+}
+</script>

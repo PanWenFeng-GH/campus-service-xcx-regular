@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boot.mapper.FeedbackDao">
+
+	<resultMap id="baseResultMap" type="com.boot.entity.Feedback">
+		<id property="id" column="id" />
+
+		<association property="wechatUser" column="wechat_id" select="getWechatUser"></association>
+	</resultMap>
+
+	<select id="getWechatUser" parameterType="map" resultType="com.boot.entity.TWechatUser">
+		select * from t_wechat_user t where id=#{wechatId}
+	</select>
+
+	<select id="pagelist" parameterType="map" resultMap="baseResultMap">
+		select d.*,u.name nickname from c_feedback d
+		left join t_wechat_user u on u.id=d.wechat_id 
+		<where>
+			<if test="name != null and name !='' ">
+				and d.name like concat('%',#{name},'%')
+			</if>
+		</where>
+		ORDER BY d.create_time desc
+	</select>
+</mapper>

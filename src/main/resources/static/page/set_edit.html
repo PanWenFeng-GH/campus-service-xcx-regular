@@ -1,0 +1,80 @@
+<style>
+	.layui-upload-img{
+		max-width: 120px;
+		max-height: 120px;
+	}
+</style>
+<div class="layuimini-container layui-anim layui-anim-upbit">
+	<div class="layuimini-main">
+		<form class="layui-form" id="demo1" style="margin: 10px">
+			<!-- 提示：如果你不想用form，你可以换成div等任何一个普通元素 -->
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">商务合作</label>
+					<div class="layui-input-block">
+						<input type="hidden" name="id" id="id" class="layui-input">
+						<textarea name="data1" id="data1" placeholder="请输入内容" class="layui-textarea"></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">加入我们</label>
+					<div class="layui-input-block">
+						<textarea name="data2" id="data2" placeholder="请输入内容" class="layui-textarea"></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">关于我们</label>
+					<div class="layui-input-block">
+						<textarea name="data3" id="data3" placeholder="请输入内容" class="layui-textarea"></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" type="submit" lay-submit=""
+						lay-filter="demo1">保存</button>
+					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/wangeditor@latest/dist/wangEditor.min.js"></script> -->
+<script type="text/javascript">
+var form ;
+var E;
+var editor;
+var id = getUrlParam("id");
+var getDetail = function(id){
+	//if(id){
+		$.post("/private/set/getLaster",{},function(obj){
+			//console.log(obj.data);
+			var data = obj.data;
+			$("#id").val(data.id);
+			$("#data1").val(data.data1);
+			$("#data2").val(data.data2);
+			$("#data3").val(data.data3);
+		});
+	//}
+}
+	layui.use([ 'form', 'tinymce','upload'], function() {
+		form = layui.form;
+		getDetail(id);//
+		form.render();
+		form.on('submit(demo1)', function(data) {
+			$.post("/private/set/save", data.field, function(obj) {
+				layer.alert(obj.message, function(index2) {
+					if (obj.success) {
+						layer.closeAll();
+					}
+					layer.close(index2);
+				});
+			}, 'json');
+			return false;
+		})
+	});
+</script>

@@ -1,0 +1,129 @@
+<div class="layuimini-container layui-anim layui-anim-upbit">
+	<div class="layuimini-main">
+		<form class="layui-form" id="demo1" style="margin: 10px">
+			<!-- 提示：如果你不想用form，你可以换成div等任何一个普通元素 -->
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">标题</label>
+					<div class="layui-input-block">
+						<input type="hidden" name="id" id="id" class="layui-input"> <input
+							type="text" name="name" id="name" placeholder="请输入标题" autocomplete="off"
+							lay-verify="required" class="layui-input">
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">发布时间</label>
+					<div class="layui-input-block">
+						<input type="text" name="releaseTime" id="releaseTime" placeholder="请选择发布时间" autocomplete="off"
+							   lay-verify="required" class="layui-input">
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-form-item">
+					<label class="layui-form-label">内容</label>
+					<div class="layui-input-block">
+						<div class="wang" id="div1"></div>
+					</div>
+					<input type="hidden" name="content" id="content" class="layui-input"> 
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" type="submit" lay-submit=""
+						lay-filter="demo1">保存</button>
+					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/wangeditor@latest/dist/wangEditor.min.js"></script> -->
+<script type="text/javascript">
+// var editor = null;
+// var E = window.wangEditor
+var form ;
+var E;
+var editor;
+var id = getUrlParam("id");
+var type = getUrlParam("type");
+// alert(id);
+var getDetail = function(id){
+	if(id){
+		$.post("/private/code/detail",{id:id},function(obj){
+			//console.log(obj.data);
+			var data = obj.data;
+			editor.txt.html(data.content);
+			$("#id").val(data.id);
+			$("#name").val(data.name);
+			$("#releaseTime").val(data.releaseTime);
+			type = data.type;
+		});
+	}
+}
+	layui.use([ 'form', 'tinymce','laydate'], function() {
+		laydate = layui.laydate;
+		form = layui.form;
+		laydate.render({
+			elem: '#releaseTime'
+			,type: 'datetime'
+
+		});
+		E = window.wangEditor
+		editor = new E(document.getElementById('div1'));
+		editor.config.uploadImgServer = '/upload';
+		editor.config.uploadFileName = 'file';
+		editor.config.uploadImgAccept = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+		editor.config.height = 400;
+		editor.config.uploadImgHooks = {
+			success: function(xhr) {
+		        console.log('success', xhr)
+		    },
+		    customInsert: function(insertImgFn, result) {
+		        // result 即服务端返回的接口
+		        console.log('customInsert', result)
+		        // insertImgFn 可把图片插入到编辑器，传入图片 src ，执行函数即可
+		        insertImgFn("https://www.campusbaima.cn/file/"+result.data);
+		    }
+		}
+		// 配置 server 接口地址
+		editor.config.uploadVideoServer = '/upload';
+		editor.config.uploadVideoMaxSize = 100 * 1024 * 1024; // 1024m
+		editor.config.uploadVideoAccept = ['mp4'];
+		editor.config.uploadVideoName = 'file';
+		editor.config.uploadVideoHooks = {
+		   success: function(xhr) {
+		        console.log('success', xhr)
+		    },
+			// 视频上传并返回了结果，想要自己把视频插入到编辑器中
+		    // 例如服务器端返回的不是 { errno: 0, data: { url : '.....'} } 这种格式，可使用 customInsert
+		    customInsert: function(insertVideoFn, result) {
+		        // result 即服务端返回的接口
+		        console.log('customInsert', result)
+		        // insertVideoFn 可把视频插入到编辑器，传入视频 src ，执行函数即可
+		        insertVideoFn("https://www.campusbaima.cn/file/"+result.name);
+		    }
+		}
+		editor.create();
+		getDetail(id);//
+		form.render();
+		form.on('submit(demo1)', function(data) {
+			var content = editor.txt.html();
+			data.field.content = content;
+			data.field.type = type;
+			$.post("/private/code/save", data.field, function(obj) {
+				layer.alert(obj.message, function(index2) {
+					if (obj.success) {
+						layer.closeAll();
+						//window.href.location = "page/data_list1.html";
+						window.location.hash = "/page/data_list"+type+".html";
+					}
+					layer.close(index2);
+				});
+			}, 'json');
+			return false;
+		})
+	});
+</script>
